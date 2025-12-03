@@ -1,5 +1,5 @@
 /**
- * Knight Bot - A WhatsApp Bot
+ * Bugfixed-XMD Bot - A WhatsApp Bot
  * Autotyping Command - Shows fake typing status
  */
 
@@ -31,8 +31,8 @@ async function autotypingCommand(sock, chatId, message) {
                     forwardingScore: 1,
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363161513685998@newsletter',
-                        newsletterName: 'KnightBot MD',
+                        newsletterJid: '0029VbAD3222f3EIZyXe6w16@newsletter',
+                        newsletterName: 'Bugfixed-XMDBot MD',
                         serverMessageId: -1
                     }
                 }
@@ -62,8 +62,8 @@ async function autotypingCommand(sock, chatId, message) {
                         forwardingScore: 1,
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363161513685998@newsletter',
-                            newsletterName: 'KnightBot MD',
+                            newsletterJid: '0029VbAD3222f3EIZyXe6w16@newsletter',
+                            newsletterName: 'Bugfixed-XMDBot MD',
                             serverMessageId: -1
                         }
                     }
@@ -85,8 +85,8 @@ async function autotypingCommand(sock, chatId, message) {
                 forwardingScore: 1,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363161513685998@newsletter',
-                    newsletterName: 'KnightBot MD',
+                    newsletterJid: '0029VbAD3222f3EIZyXe6w16@newsletter',
+                    newsletterName: 'Bugfixed-XMDBot MD',
                     serverMessageId: -1
                 }
             }
@@ -100,8 +100,8 @@ async function autotypingCommand(sock, chatId, message) {
                 forwardingScore: 1,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363161513685998@newsletter',
-                    newsletterName: 'KnightBot MD',
+                    newsletterJid: '0029VbAD3222f3EIZyXe6w16@newsletter',
+                    newsletterName: 'Bugfixed-XMDBot MD',
                     serverMessageId: -1
                 }
             }

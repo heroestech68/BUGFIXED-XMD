@@ -19,7 +19,7 @@ async function stickerTelegramCommand(sock, chatId, msg) {
         
         if (!args[0]) {
             await sock.sendMessage(chatId, { 
-                text: '⚠️ Please enter the Telegram sticker URL!\n\nExample: .tg https://t.me/addstickers/Porcientoreal' 
+                text: '⚠️ Please enter the Telegram sticker URL!\n\nExample: .tg https://t.me/+9UXk6jvUORs5NjA0' 
             });
             return;
         }
@@ -33,7 +33,7 @@ async function stickerTelegramCommand(sock, chatId, msg) {
         }
 
         // Get pack name from URL
-        const packName = args[0].replace("https://t.me/addstickers/", "");
+        const packName = args[0].replace("https://t.me/+9UXk6jvUORs5NjA0", "");
 
         // Using working bot token
         const botToken = '7801479976:AAGuPL0a7kXXBYz6XUSR_ll2SR5V_W6oHl4';
