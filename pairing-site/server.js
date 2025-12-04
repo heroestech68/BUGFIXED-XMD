@@ -3,13 +3,9 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import fs from "fs";
 import path from "path";
-import makeWASocket, {
-  useMultiFileAuthState,
-  DisconnectReason
-} from "@whiskeysockets/baileys";
 import { fileURLToPath } from "url";
+import makeWASocket, { useMultiFileAuthState, Browsers } from "@whiskeysockets/baileys";
 
-// Setup
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -18,133 +14,107 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname)));
 
-const sessions = {}; // Store running sockets
+const sessions = {};  // store active sessions
 
-// ─────────────────────────────────────────────────────────────
-// START PAIRING
-// ─────────────────────────────────────────────────────────────
-app.post("/api/pair", async (req, res) => {
-  try {
-    const phone = req.body.phone;
-    if (!phone) return res.json({ ok: false, error: "Phone missing" });
+// ------------------------------
+// START SESSION
+// ------------------------------
+app.post("/api/start-session", async (req, res) => {
+    try {
+        const { sessionId, phoneNumber } = req.body;
 
-    const sessionId = Date.now().toString();
-    const sessionDir = path.join(__dirname, "sessions", sessionId);
-    fs.mkdirSync(sessionDir, { recursive: true });
-
-    const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-
-    const sock = makeWASocket({
-      auth: state,
-      printQRInTerminal: false,
-      browser: ["Bugfixed Sulexh Tech", "Chrome", "1.0.0"],
-      mobile: false
-    });
-
-    sessions[sessionId] = {
-      sock,
-      qr: null,
-      code: null,
-      ready: false,
-      creds: null
-    };
-
-    // Save creds
-    sock.ev.on("creds.update", saveCreds);
-
-    // Handle connection updates
-    sock.ev.on("connection.update", async (update) => {
-      const { connection, lastDisconnect, qr, pairingCode } = update;
-
-      // QR CODE (will show on frontend)
-      if (qr) sessions[sessionId].qr = qr;
-
-      // PAIRING CODE (this is what shows “Link this number?” on WhatsApp)
-      if (pairingCode) sessions[sessionId].code = pairingCode;
-
-      // Reconnect logic
-      if (connection === "close") {
-        const shouldReconnect =
-          (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-
-        if (shouldReconnect) {
-          console.log("Reconnecting...");
-          sock.connect();
-        } else {
-          console.log("Logged out.");
+        if (!sessionId || !phoneNumber) {
+            return res.status(400).json({ success: false, message: "Missing sessionId or phoneNumber" });
         }
-      }
 
-      // Connection successful
-      if (connection === "open") {
-        const credsPath = path.join(sessionDir, "creds.json");
+        // Initialize multi-file auth folder
+        const authFolder = path.join(__dirname, "sessions", sessionId);
+        if (!fs.existsSync(authFolder)) fs.mkdirSync(authFolder, { recursive: true });
 
-        if (fs.existsSync(credsPath)) {
-          const data = fs.readFileSync(credsPath, "utf8");
-          sessions[sessionId].ready = true;
-          sessions[sessionId].creds = data;
-        }
-      }
-    });
+        const { state, saveCreds } = await useMultiFileAuthState(authFolder);
+
+        const sock = makeWASocket({
+            printQRInTerminal: false,
+            browser: Browsers.macOS("Desktop"),
+            auth: state
+        });
+
+        sessions[sessionId] = { sock, saveCreds, status: "starting", pairingCode: null };
+
+        // 🔥 Request Pairing Code
+        const code = await sock.requestPairingCode(phoneNumber);
+        sessions[sessionId].pairingCode = code;
+        sessions[sessionId].status = "pairing";
+
+        console.log("PAIRING CODE:", code);
+
+        return res.json({ success: true });
+
+        // ------------------------------
+        // SOCKET EVENTS
+        // ------------------------------
+        sock.ev.on("creds.update", saveCreds);
+
+        sock.ev.on("connection.update", (update) => {
+            let { connection } = update;
+
+            if (connection === "open") {
+                sessions[sessionId].status = "connected";
+
+                // Save final creds.json (export)
+                const credsPath = path.join(authFolder, "creds.json");
+                fs.writeFileSync(
+                    credsPath,
+                    JSON.stringify(state.creds, null, 2)
+                );
+
+            } else if (connection === "close") {
+                sessions[sessionId].status = "closed";
+            }
+        });
+
+    } catch (err) {
+        console.error("Error starting session:", err);
+        res.status(500).json({ success: false });
+    }
+});
+
+// ------------------------------
+// GET STATUS
+// ------------------------------
+app.get("/api/status/:sessionId", (req, res) => {
+    const sessionId = req.params.sessionId;
+
+    if (!sessions[sessionId]) {
+        return res.json({ exists: false });
+    }
+
+    const s = sessions[sessionId];
 
     res.json({
-      ok: true,
-      session: sessionId,
-      qr: null,
-      code: null,
-      ready: false
+        exists: true,
+        status: s.status,
+        pairingCode: s.pairingCode,
+        credsReady: s.status === "connected"
     });
-
-  } catch (err) {
-    console.error(err);
-    res.json({ ok: false, error: "Server error" });
-  }
 });
 
-// ─────────────────────────────────────────────────────────────
-// POLL SESSION STATUS
-// ─────────────────────────────────────────────────────────────
-app.get("/api/status/:sessionId", (req, res) => {
-  const id = req.params.sessionId;
-  const s = sessions[id];
-
-  if (!s) return res.json({ ok: false, error: "Invalid session" });
-
-  res.json({
-    ok: true,
-    ready: s.ready,
-    qr: s.qr,
-    code: s.code,
-    creds: s.ready ? s.creds : null
-  });
-});
-
-// ─────────────────────────────────────────────────────────────
+// ------------------------------
 // DOWNLOAD CREDS
-// ─────────────────────────────────────────────────────────────
-app.get("/api/download/:sessionId/:format", (req, res) => {
-  const { sessionId, format } = req.params;
-  const s = sessions[sessionId];
+// ------------------------------
+app.get("/api/download-creds/:sessionId", (req, res) => {
+    const sessionId = req.params.sessionId;
 
-  if (!s || !s.creds) return res.status(404).send("Not ready");
+    const credsPath = path.join(__dirname, "sessions", sessionId, "creds.json");
 
-  if (format === "json") {
-    res.setHeader("Content-Disposition", `attachment; filename=creds-${sessionId}.json`);
-    return res.end(s.creds);
-  }
+    if (!fs.existsSync(credsPath)) {
+        return res.status(404).json({ error: "Creds not found" });
+    }
 
-  if (format === "js") {
-    res.setHeader("Content-Disposition", `attachment; filename=creds-${sessionId}.js`);
-    return res.end(`export default ${s.creds}`);
-  }
-
-  res.status(400).send("Invalid format");
+    res.download(credsPath);
 });
 
-// ─────────────────────────────────────────────────────────────
-// START SERVER
-// ─────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`PAIRING SERVER STARTED ON PORT ${PORT}`);
+// ------------------------------
+app.listen(3000, () => {
+    console.log("Pairing server running on port 3000");
 });
