@@ -1,95 +1,69 @@
-body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background: url("wallpaper.jpg") no-repeat center center fixed;
-  background-size: cover;
+:root{
+  --bg1:#071022; --bg2:#0b1220; --accent1:#ff6b2d; --accent2:#00d166;
+  --muted:#98a0b3; --text:#e6f0ff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:Inter, system-ui, Arial;
+  background: radial-gradient(circle at 10% 10%, rgba(0,50,80,0.08), transparent 20%),
+              linear-gradient(180deg,var(--bg1),var(--bg2));
+  color:var(--text); -webkit-font-smoothing:antialiased;
+  min-height:100vh;
 }
 
-.overlay {
-  backdrop-filter: blur(4px);
-  width: 100%;
-  min-height: 100vh;
-  padding: 20px;
-}
+/* top bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 18px}
+.left{display:flex;align-items:center;gap:12px}
+.avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.08)}
+.brand{font-weight:700;color:var(--text);text-transform:lowercase;opacity:0.95}
+.battery{padding:6px 10px;border-radius:18px;background:rgba(255,255,255,0.03);font-weight:600}
 
-.card {
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 20px;
-  padding: 25px;
-  margin: 10px auto;
-  max-width: 95%;
-  text-align: center;
-  color: #fff;
+/* center */
+.center{max-width:920px;margin:8px auto;padding:20px}
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.03);
+  padding:18px;border-radius:16px;margin-bottom:18px; box-shadow:0 8px 30px rgba(0,0,0,0.5)
 }
-
-.profile {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  border: 3px solid #00ff90;
-  object-fit: cover;
+.circle{
+  width:86px;height:86px;border-radius:50%;margin:0 auto 12px;border:6px solid rgba(0,0,0,0.12);
+  background: conic-gradient(var(--accent1), var(--accent2));
+  animation: rotate 3s linear infinite; box-shadow:0 6px 18px rgba(0,0,0,0.5);
 }
+@keyframes rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.title{font-size:20px;margin:6px 0;color:transparent;background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text}
+.subtitle{color:var(--muted);margin:6px 0 12px;font-size:13px}
 
-.title {
-  margin-top: 10px;
-  font-size: 32px;
-  font-weight: bold;
-  background: linear-gradient(to right, orange, green);
-  -webkit-background-clip: text;
-  color: transparent;
+.lbl{display:block;color:var(--muted);margin-bottom:8px}
+.input{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);background:#07101a;color:var(--text);font-size:16px}
+
+.btn{
+  width:100%;padding:12px;border-radius:14px;border:none;margin-top:12px;
+  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  color:#001;background-size:200% 100%;font-weight:700;cursor:pointer;font-size:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.45);
 }
+.codebox{margin-top:14px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.01);min-height:90px}
+.statusText{color:var(--muted);font-size:14px}
+.qr{display:block;margin:12px auto;max-width:260px}
+.creds{background:#06101a;padding:12px;border-radius:8px;color:#bfefff;overflow:auto}
 
-.subtitle {
-  font-size: 16px;
-  opacity: 0.9;
-}
+/* player */
+.player{display:flex;flex-direction:column;align-items:center;gap:10px}
+.playerTitle{color:var(--accent1);margin:0;font-size:14px}
+.songTitle{font-weight:700;font-size:16px}
+audio{width:90%;max-width:380px;border-radius:8px;background:transparent}
 
-.input {
-  width: 90%;
-  padding: 12px;
-  margin-top: 15px;
-  border-radius: 12px;
-  border: none;
-  outline: none;
-  font-size: 16px;
-}
+/* actions */
+.actions{display:flex;gap:10px;justify-content:center;margin-top:10px}
+.fileBtn{padding:8px 12px;border-radius:12px;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#001;text-decoration:none;font-weight:700}
+.fileBtn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)}
 
-.btn {
-  margin-top: 20px;
-  width: 90%;
-  padding: 12px;
-  font-size: 18px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(to right, orange, green);
-  color: white;
-  cursor: pointer;
-}
+/* footer */
+.foot{text-align:center;color:var(--muted);margin:8px}
 
-.result {
-  margin-top: 20px;
-  padding: 10px;
-  font-size: 18px;
-  color: #00ff90;
-}
-
-.audio-section {
-  margin: 40px auto;
-  max-width: 95%;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  padding: 20px;
-  border-radius: 20px;
-  text-align: center;
-}
-
-.song-title {
-  margin-top: -10px;
-  font-size: 18px;
-}
-
-audio {
-  width: 100%;
-  margin-top: 10px;
+/* responsive layout */
+@media (min-width:900px){
+  .center{display:grid;grid-template-columns:1fr 360px;gap:18px}
+  .card{margin-bottom:0}
 }
