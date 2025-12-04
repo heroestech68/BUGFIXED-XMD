@@ -1,0 +1,61 @@
+import express from "express";
+import { Boom } from "@hapi/boom";
+import {
+    default as makeWASocket,
+    useMultiFileAuthState,
+    fetchLatestBaileysVersion,
+    makeCacheableSignalKeyStore
+} from "@whiskeysockets/baileys";
+
+import cors from "cors";
+import path from "path";
+import fs from "fs";
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const __dirname = path.resolve();
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "views/index.html"));
+});
+
+app.get("/generate", async (req, res) => {
+    try {
+        const { state, saveCreds } = await useMultiFileAuthState("./session");
+        const { version } = await fetchLatestBaileysVersion();
+
+        const sock = makeWASocket({
+            version,
+            printQRInTerminal: false,
+            auth: {
+                creds: state.creds,
+                keys: makeCacheableSignalKeyStore(state.keys, null)
+            }
+        });
+
+        const code = await sock.requestPairingCode(req.query.phone);
+        console.log("PAIR CODE:", code);
+
+        sock.ev.on("creds.update", saveCreds);
+        sock.ev.on("connection.update", async update => {
+            if (update.connection === "open") {
+                const creds = fs.readFileSync("./session/creds.json", "utf8");
+                return res.json({
+                    pairing_code: code,
+                    creds: creds
+                });
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.json({ error: true, message: error.message });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("PAIRING SITE RUNNING ON PORT", PORT));
