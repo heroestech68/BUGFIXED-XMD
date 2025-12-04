@@ -1,61 +1,58 @@
-import express from "express";
-import { Boom } from "@hapi/boom";
-import {
-    default as makeWASocket,
-    useMultiFileAuthState,
-    fetchLatestBaileysVersion,
-    makeCacheableSignalKeyStore
-} from "@whiskeysockets/baileys";
-
-import cors from "cors";
-import path from "path";
-import fs from "fs";
+const express = require("express");
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
+const cors = require("cors");
+const fs = require("fs");
+const bodyParser = require("body-parser");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
-
-const __dirname = path.resolve();
-
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "views/index.html"));
-});
+app.use(bodyParser.json());
+app.use(express.static("public"));
 
 app.get("/generate", async (req, res) => {
-    try {
-        const { state, saveCreds } = await useMultiFileAuthState("./session");
-        const { version } = await fetchLatestBaileysVersion();
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState("auth_info");
+    const { version } = await fetchLatestBaileysVersion();
 
-        const sock = makeWASocket({
-            version,
-            printQRInTerminal: false,
-            auth: {
-                creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, null)
-            }
+    const sock = makeWASocket({
+      version,
+      printQRInTerminal: false,
+      auth: state
+    });
+
+    sock.ev.on("connection.update", async (update) => {
+      const { pairingCode, connection } = update;
+
+      if (pairingCode) {
+        res.json({ pairingCode });
+      }
+
+      if (connection === "open") {
+        console.log("Connected!");
+
+        await saveCreds();
+
+        // Read generated creds.json
+        const credsJson = fs.readFileSync("auth_info/creds.json", "utf8");
+
+        // Convert to JS export file
+        const credsJs =
+          "module.exports = " + credsJson + ";";
+
+        fs.writeFileSync("auth_info/creds.js", credsJs);
+
+        res.json({
+          success: true,
+          credsJs: credsJs
         });
 
-        const code = await sock.requestPairingCode(req.query.phone);
-        console.log("PAIR CODE:", code);
+        process.exit(0);
+      }
+    });
 
-        sock.ev.on("creds.update", saveCreds);
-        sock.ev.on("connection.update", async update => {
-            if (update.connection === "open") {
-                const creds = fs.readFileSync("./session/creds.json", "utf8");
-                return res.json({
-                    pairing_code: code,
-                    creds: creds
-                });
-            }
-        });
-
-    } catch (error) {
-        console.error(error);
-        return res.json({ error: true, message: error.message });
-    }
+  } catch (err) {
+    res.json({ error: err.message });
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("PAIRING SITE RUNNING ON PORT", PORT));
+app.listen(3000, () => console.log("Pairing site running on port 3000"));
