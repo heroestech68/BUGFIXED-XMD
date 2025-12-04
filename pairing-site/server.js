@@ -3,21 +3,22 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import fs from "fs";
 import path from "path";
-import { Boom } from "@hapi/boom";
-import makeWASocket, { useMultiFileAuthState, DisconnectReason } from "@whiskeysockets/baileys";
+import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason
+} from "@whiskeysockets/baileys";
 import { fileURLToPath } from "url";
 
-// Folder setup
+// Setup
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Storage for active sessions
-const sessions = {};
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname)));
+
+const sessions = {}; // Store running sockets
 
 // ─────────────────────────────────────────────────────────────
 // START PAIRING
@@ -36,53 +37,67 @@ app.post("/api/pair", async (req, res) => {
     const sock = makeWASocket({
       auth: state,
       printQRInTerminal: false,
-      browser: ["Bugfixed Sulexh Tech", "Chrome", "1.0.0"]
+      browser: ["Bugfixed Sulexh Tech", "Chrome", "1.0.0"],
+      mobile: false
     });
 
-    sessions[sessionId] = { sock, ready: false, creds: null };
+    sessions[sessionId] = {
+      sock,
+      qr: null,
+      code: null,
+      ready: false,
+      creds: null
+    };
 
-    sock.ev.on("creds.update", () => saveCreds());
+    // Save creds
+    sock.ev.on("creds.update", saveCreds);
 
+    // Handle connection updates
     sock.ev.on("connection.update", async (update) => {
-      const { connection, lastDisconnect, qr } = update;
+      const { connection, lastDisconnect, qr, pairingCode } = update;
 
-      // Return QR to frontend
-      if (qr) {
-        sessions[sessionId].qr = qr;
-      }
+      // QR CODE (will show on frontend)
+      if (qr) sessions[sessionId].qr = qr;
 
-      // Return pairing code when WhatsApp requests it
-      if (update.pairingCode) {
-        sessions[sessionId].code = update.pairingCode;
-      }
+      // PAIRING CODE (this is what shows “Link this number?” on WhatsApp)
+      if (pairingCode) sessions[sessionId].code = pairingCode;
 
+      // Reconnect logic
       if (connection === "close") {
-        if ((lastDisconnect.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut) {
+        const shouldReconnect =
+          (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+
+        if (shouldReconnect) {
+          console.log("Reconnecting...");
           sock.connect();
+        } else {
+          console.log("Logged out.");
         }
       }
 
-      // Once connected, save creds
+      // Connection successful
       if (connection === "open") {
         const credsPath = path.join(sessionDir, "creds.json");
-        const data = fs.readFileSync(credsPath, "utf8");
 
-        sessions[sessionId].ready = true;
-        sessions[sessionId].creds = data;
+        if (fs.existsSync(credsPath)) {
+          const data = fs.readFileSync(credsPath, "utf8");
+          sessions[sessionId].ready = true;
+          sessions[sessionId].creds = data;
+        }
       }
     });
 
-    // Respond immediately
-    return res.json({
+    res.json({
       ok: true,
       session: sessionId,
-      type: "waiting",
       qr: null,
-      code: null
+      code: null,
+      ready: false
     });
+
   } catch (err) {
     console.error(err);
-    return res.json({ ok: false, error: "Server error" });
+    res.json({ ok: false, error: "Server error" });
   }
 });
 
@@ -91,16 +106,16 @@ app.post("/api/pair", async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 app.get("/api/status/:sessionId", (req, res) => {
   const id = req.params.sessionId;
-  const session = sessions[id];
+  const s = sessions[id];
 
-  if (!session) return res.json({ ok: false, error: "Invalid Session" });
+  if (!s) return res.json({ ok: false, error: "Invalid session" });
 
-  return res.json({
+  res.json({
     ok: true,
-    ready: session.ready,
-    qr: session.qr || null,
-    code: session.code || null,
-    creds: session.ready ? session.creds : null
+    ready: s.ready,
+    qr: s.qr,
+    code: s.code,
+    creds: s.ready ? s.creds : null
   });
 });
 
@@ -109,18 +124,18 @@ app.get("/api/status/:sessionId", (req, res) => {
 // ─────────────────────────────────────────────────────────────
 app.get("/api/download/:sessionId/:format", (req, res) => {
   const { sessionId, format } = req.params;
-  const session = sessions[sessionId];
-  if (!session || !session.creds)
-    return res.status(404).send("Not ready");
+  const s = sessions[sessionId];
+
+  if (!s || !s.creds) return res.status(404).send("Not ready");
 
   if (format === "json") {
     res.setHeader("Content-Disposition", `attachment; filename=creds-${sessionId}.json`);
-    return res.end(session.creds);
+    return res.end(s.creds);
   }
 
   if (format === "js") {
     res.setHeader("Content-Disposition", `attachment; filename=creds-${sessionId}.js`);
-    return res.end(`export default ${session.creds}`);
+    return res.end(`export default ${s.creds}`);
   }
 
   res.status(400).send("Invalid format");
