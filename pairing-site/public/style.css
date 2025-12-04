@@ -1,18 +1,67 @@
-body {
-    background: #000;
-    color: #0f0;
-    font-family: monospace;
-    text-align: center;
-    padding: 20px;
+:root{
+  --bg1:#071022; --bg2:#0b1220; --glass: rgba(255,255,255,0.03);
+  --accent1:#ff6b2d; --accent2:#00d166; --muted:#98a0b3;
+  --card:#0f1724; --text:#e6f0ff;
 }
-button {
-    padding: 10px 25px;
-    font-size: 17px;
-    cursor: pointer;
-    margin: 10px;
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:Inter, system-ui, Arial;
+  background: radial-gradient(circle at 10% 10%, rgba(0,50,80,0.08), transparent 20%),
+              linear-gradient(180deg,var(--bg1),var(--bg2));
+  color:var(--text); -webkit-font-smoothing:antialiased;
+  min-height:100vh;
 }
-textarea {
-    width: 90%;
-    height: 200px;
-    margin-top: 20px;
+
+/* top bar */
+.topbar{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:16px 18px;
 }
+.left{display:flex;align-items:center;gap:12px}
+.avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.08)}
+.brand{font-weight:700;color:linear-gradient(90deg,var(--accent1),var(--accent2)); text-transform:lowercase}
+.battery{padding:6px 10px;border-radius:18px;background:rgba(255,255,255,0.03);font-weight:600}
+
+/* center area */
+.center{max-width:880px;margin:8px auto;padding:20px}
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.03);
+  padding:18px;border-radius:16px;margin-bottom:18px; box-shadow:0 8px 30px rgba(0,0,0,0.5)
+}
+.title{font-size:20px;margin:0;color:transparent;background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text}
+.subtitle{color:var(--muted);margin:6px 0 12px;font-size:13px}
+
+.lbl{display:block;color:var(--muted);margin-bottom:8px}
+.input{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);background:#07101a;color:var(--text);font-size:16px}
+
+.btn{
+  width:100%;padding:12px;border-radius:14px;border:none;margin-top:12px;
+  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  color:#001;background-size:200% 100%;font-weight:700;cursor:pointer;font-size:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.45);
+}
+.codebox{margin-top:14px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.01);min-height:90px}
+.statusText{color:var(--muted);font-size:14px}
+.qr{display:block;margin:12px auto;max-width:260px}
+.creds{background:#06101a;padding:12px;border-radius:8px;color:#bfefff;overflow:auto}
+
+/* player */
+.player{display:flex;flex-direction:column;align-items:center;gap:10px}
+.playerTitle{color:var(--accent1);margin:0;font-size:14px}
+.songTitle{font-weight:700;font-size:16px}
+audio{width:90%;max-width:380px;border-radius:8px;background:transparent}
+
+/* file buttons */
+.actions{display:flex;gap:10px;justify-content:center;margin-top:10px}
+.fileBtn{padding:8px 12px;border-radius:12px;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#001;text-decoration:none;font-weight:700}
+.fileBtn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)}
+
+/* footer */
+.foot{text-align:center;color:var(--muted);margin:8px}
+
+/* responsive */
+@media (min-width:900px){
+  .center{display:grid;grid-template-columns:1fr 360px;gap:18px}
+  .card{margin-bottom:0}
+    }
