@@ -21,6 +21,7 @@
 
   <main class="center">
     <section class="card">
+      <div class="circle" id="spinner" aria-hidden="true"></div>
       <h2 class="title">PAIRING CODE</h2>
       <p class="subtitle">BUGFIXED-SULEXH-MD MULTI DEVICE</p>
 
@@ -32,7 +33,7 @@
       <div id="codeBox" class="codebox" aria-live="polite">
         <div id="statusText" class="statusText">No session yet</div>
         <img id="qrImg" class="qr" alt="" style="display:none"/>
-        <pre id="credsPre" class="creds" style="display:none"></pre>
+        <pre id="credsPre" class="creds" style="display:none; white-space: pre-wrap;"></pre>
 
         <div class="actions" id="actionRow" style="display:none">
           <a id="downloadJs" class="fileBtn" download>Download creds.js</a>
