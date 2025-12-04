@@ -1,58 +1,42 @@
 const express = require("express");
-const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
-const cors = require("cors");
+const path = require("path");
+const manager = require("./manager");
 const fs = require("fs");
-const bodyParser = require("body-parser");
-
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static("public"));
 
-app.get("/generate", async (req, res) => {
-  try {
-    const { state, saveCreds } = await useMultiFileAuthState("auth_info");
-    const { version } = await fetchLatestBaileysVersion();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/public", express.static(path.join(__dirname, "public")));
 
-    const sock = makeWASocket({
-      version,
-      printQRInTerminal: false,
-      auth: state
-    });
-
-    sock.ev.on("connection.update", async (update) => {
-      const { pairingCode, connection } = update;
-
-      if (pairingCode) {
-        res.json({ pairingCode });
-      }
-
-      if (connection === "open") {
-        console.log("Connected!");
-
-        await saveCreds();
-
-        // Read generated creds.json
-        const credsJson = fs.readFileSync("auth_info/creds.json", "utf8");
-
-        // Convert to JS export file
-        const credsJs =
-          "module.exports = " + credsJson + ";";
-
-        fs.writeFileSync("auth_info/creds.js", credsJs);
-
-        res.json({
-          success: true,
-          credsJs: credsJs
-        });
-
-        process.exit(0);
-      }
-    });
-
-  } catch (err) {
-    res.json({ error: err.message });
-  }
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "views/index.html"));
 });
 
-app.listen(3000, () => console.log("Pairing site running on port 3000"));
+app.get("/generate", async (req, res) => {
+    try {
+        const code = await manager.generatePairingCode();
+        res.json({ status: true, code });
+    } catch (err) {
+        res.json({ status: false, message: err.message });
+    }
+});
+
+app.post("/save-creds", (req, res) => {
+    try {
+        const { creds } = req.body;
+        if (!creds) return res.json({ status: false, message: "No creds provided" });
+
+        if (!fs.existsSync("./creds")) fs.mkdirSync("./creds");
+
+        fs.writeFileSync("./creds/creds.js", creds, "utf8");
+
+        res.json({ status: true, message: "creds.js saved successfully!" });
+    } catch (err) {
+        res.json({ status: false, message: err.message });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log("Pairing site running on port " + PORT);
+});
