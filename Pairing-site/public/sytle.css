@@ -1,27 +1,18 @@
 body {
-    background: #111;
-    color: #00eaff;
-    font-family: Arial;
+    background: #000;
+    color: #0f0;
+    font-family: monospace;
     text-align: center;
-    padding-top: 40px;
-}
-input {
-    padding: 10px;
-    width: 280px;
-    font-size: 18px;
-    border-radius: 8px;
+    padding: 20px;
 }
 button {
-    padding: 12px 20px;
-    font-size: 18px;
-    background: #00eaff;
-    border: none;
-    border-radius: 8px;
+    padding: 10px 25px;
+    font-size: 17px;
+    cursor: pointer;
+    margin: 10px;
 }
-pre {
+textarea {
+    width: 90%;
+    height: 200px;
     margin-top: 20px;
-    color: #0f0;
-    text-align: left;
-    width: 80%;
-    margin-left: 10%;
 }
