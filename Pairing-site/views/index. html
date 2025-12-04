@@ -1,19 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>BUGFIXED-XMD Pairing</title>
-  <link rel="stylesheet" href="/public/style.css" />
+  <title>Pair Your WhatsApp</title>
+  <style>
+    body { font-family: Arial; padding: 30px; }
+    #box { width: 300px; padding: 20px; border: 1px solid #aaa; }
+  </style>
 </head>
 <body>
-  <h1>BUGFIXED-XMD Pairing Code Generator</h1>
+  <h2>BUGFIXED-XMD Pairing</h2>
 
-  <button onclick="generateCode()">Generate Pairing Code</button>
+  <div id="box">
+    <form id="pairForm">
+      <label>Enter WhatsApp Number:</label><br><br>
+      <input type="text" id="number" placeholder="2547xxxxxxxx"><br><br>
+      <button type="submit">Get Pairing Code</button>
+    </form>
 
-  <div id="result"></div>
+    <pre id="result"></pre>
+  </div>
 
-  <textarea id="credsBox" placeholder="Paste your creds.js here"></textarea>
-  <button onclick="saveCreds()">Save Creds</button>
+  <script>
+    document.getElementById("pairForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const number = document.getElementById("number").value;
 
-  <script src="/public/script.js"></script>
+      let res = await fetch("/pair", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ number })
+      });
+
+      let data = await res.json();
+      document.getElementById("result").textContent =
+        "Pairing Code: " + data.pairing_code;
+    };
+  </script>
 </body>
 </html>
