@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "pair": "node pairing-site/server.js",
-    "build": "npm install --prefix pairing-site && echo Build complete"
+    "postinstall": "npm install --prefix pairing-site"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
