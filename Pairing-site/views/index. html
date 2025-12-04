@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BUGFIXED-XM Pair Code Generator</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<h1>BUGFIXED-XM Pairing Generator</h1>
+
+<input id="phone" placeholder="Enter phone (2547xxxxxxx)">
+<button onclick="generate()">Generate Pair Code</button>
+
+<pre id="output"></pre>
+
+<script>
+async function generate() {
+    let phone = document.getElementById("phone").value;
+
+    let req = await fetch(`/generate?phone=${phone}`);
+    let res = await req.json();
+
+    document.getElementById("output").innerHTML =
+`PAIRING CODE: ${res.pairing_code}
+
+CREDS.JSON:
+${res.creds}`;
+}
+</script>
+</body>
+</html>
