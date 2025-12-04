@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BUGFIXED-XMD Pairing</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg"></div>
+
+  <header class="topbar">
+    <div class="left">
+      <img src="avatar.png" alt="avatar" class="avatar" id="avatarImg">
+      <span class="brand">bugfixed sulexh tech</span>
+    </div>
+    <div class="right">
+      <div class="battery">54%</div>
+    </div>
+  </header>
+
+  <main class="center">
+    <section class="card">
+      <h2 class="title">PAIRING CODE</h2>
+      <p class="subtitle">BUGFIXED-SULEXH-MD MULTI DEVICE</p>
+
+      <label class="lbl">Please enter your number with country code</label>
+      <input id="phone" class="input" placeholder="e.g. 254712345678" inputmode="numeric" />
+
+      <button id="submitBtn" class="btn">SUBMIT</button>
+
+      <div id="codeBox" class="codebox" aria-live="polite">
+        <div id="statusText" class="statusText">No session yet</div>
+        <img id="qrImg" class="qr" alt="" style="display:none"/>
+        <pre id="credsPre" class="creds" style="display:none"></pre>
+
+        <div class="actions" id="actionRow" style="display:none">
+          <a id="downloadJs" class="fileBtn" download>Download creds.js</a>
+          <a id="downloadJson" class="fileBtn secondary" download>Download creds.json</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="player card">
+      <h3 class="playerTitle">PLAY NOW</h3>
+      <div class="songTitle">bugfixed sulexh tech Song</div>
+      <audio id="audio" controls preload="none">
+        <source src="song.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+    </section>
+  </main>
+
+  <footer class="foot">© BUGFIXED-XMD — Sulexh Tech</footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
