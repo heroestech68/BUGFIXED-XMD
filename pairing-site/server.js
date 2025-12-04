@@ -1,42 +1,33 @@
-const express = require("express");
-const path = require("path");
-const manager = require("./manager");
-const fs = require("fs");
-const app = express();
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import qrcode from "qrcode";
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use("/public", express.static(path.join(__dirname, "public")));
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "views/index.html"));
+  res.sendFile(process.cwd() + "/pairing-site/views/index.html");
 });
 
-app.get("/generate", async (req, res) => {
-    try {
-        const code = await manager.generatePairingCode();
-        res.json({ status: true, code });
-    } catch (err) {
-        res.json({ status: false, message: err.message });
-    }
+// Generate QR
+app.get("/generate-qr", async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) return res.status(400).json({ error: "No code provided" });
+
+    const qr = await qrcode.toDataURL(code);
+    res.json({ qr });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "QR generation failed" });
+  }
 });
 
-app.post("/save-creds", (req, res) => {
-    try {
-        const { creds } = req.body;
-        if (!creds) return res.json({ status: false, message: "No creds provided" });
-
-        if (!fs.existsSync("./creds")) fs.mkdirSync("./creds");
-
-        fs.writeFileSync("./creds/creds.js", creds, "utf8");
-
-        res.json({ status: true, message: "creds.js saved successfully!" });
-    } catch (err) {
-        res.json({ status: false, message: err.message });
-    }
-});
-
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log("Pairing site running on port " + PORT);
+  console.log(`PAIRING SITE running on PORT ${PORT}`);
 });
