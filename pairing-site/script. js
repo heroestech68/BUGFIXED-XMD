@@ -1,0 +1,24 @@
+async function generateCode() {
+  const number = document.getElementById("numberInput").value.trim();
+
+  if (!number) {
+    alert("Enter phone number!");
+    return;
+  }
+
+  document.getElementById("pairingResult").innerHTML = "Generating...";
+
+  try {
+    const res = await fetch("/pair-code?number=" + number);
+    const data = await res.json();
+
+    if (data.code) {
+      document.getElementById("pairingResult").innerHTML =
+        "Your pairing code:<br><b>" + data.code + "</b>";
+    } else {
+      document.getElementById("pairingResult").innerHTML = "Error generating code";
+    }
+  } catch (err) {
+    document.getElementById("pairingResult").innerHTML = "Server error";
+  }
+}
