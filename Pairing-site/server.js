@@ -1,42 +1,45 @@
-const express = require("express");
-const path = require("path");
-const manager = require("./manager");
-const fs = require("fs");
-const app = express();
+import express from "express";
+import { Boom } from "@hapi/boom";
+import pino from "pino";
+import {
+  makeWASocket,
+  useMultiFileAuthState,
+} from "@whiskeysockets/baileys";
 
+const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/public", express.static(path.join(__dirname, "public")));
+app.use(express.static("pairing-site/public"));
+
+app.set("view engine", "html");
+app.set("views", "pairing-site/views");
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "views/index.html"));
+  res.render("index.html");
 });
 
-app.get("/generate", async (req, res) => {
-    try {
-        const code = await manager.generatePairingCode();
-        res.json({ status: true, code });
-    } catch (err) {
-        res.json({ status: false, message: err.message });
-    }
+app.post("/pair", async (req, res) => {
+  const { number } = req.body;
+  if (!number) return res.status(400).send("Number required");
+
+  const { state, saveCreds } = await useMultiFileAuthState("pairing-site/creds");
+  const sock = makeWASocket({
+    auth: state,
+    printQRInTerminal: false,
+    logger: pino({ level: "silent" }),
+  });
+
+  let code = await sock.requestPairingCode(number);
+  code = code?.match(/.{1,4}/g)?.join(" ") || code;
+
+  res.json({
+    pairing_code: code,
+    message: "Use this code in WhatsApp to link",
+  });
+
+  sock.ev.on("creds.update", saveCreds);
 });
 
-app.post("/save-creds", (req, res) => {
-    try {
-        const { creds } = req.body;
-        if (!creds) return res.json({ status: false, message: "No creds provided" });
-
-        if (!fs.existsSync("./creds")) fs.mkdirSync("./creds");
-
-        fs.writeFileSync("./creds/creds.js", creds, "utf8");
-
-        res.json({ status: true, message: "creds.js saved successfully!" });
-    } catch (err) {
-        res.json({ status: false, message: err.message });
-    }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log("Pairing site running on port " + PORT);
+app.listen(3000, () => {
+  console.log("Pairing UI running on port 3000");
 });
