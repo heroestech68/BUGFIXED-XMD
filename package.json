@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "start:pair": "node pairing-site/server.js",
+    "build": "cd pairing-site && npm install",
     "start:optimized": "node --max-old-space-size=512 --optimize-for-size --gc-interval=100 index.js",
     "cleanup": "node cleanup.js",
     "reset-session": "node reset-session.js",
