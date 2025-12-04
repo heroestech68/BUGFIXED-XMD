@@ -1,105 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Bugfixed Sulexh MD Pairing</title>
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-
-<style>
-body {
-  background: #000915;
-  color: white;
-  font-family: Arial;
-  padding: 20px;
-  text-align: center;
-}
-.card {
-  padding: 20px;
-  border-radius: 15px;
-  background: #0a1222;
-  margin-top: 20px;
-}
-input {
-  padding: 12px;
-  width: 80%;
-  border-radius: 10px;
-  background: #000;
-  border: 1px solid #222;
-  color: white;
-  font-size: 16px;
-}
-button {
-  margin-top: 15px;
-  padding: 14px;
-  width: 80%;
-  border-radius: 25px;
-  background: linear-gradient(to right, orange, green);
-  border: none;
-  font-size: 18px;
-  font-weight: bold;
-  color: #000;
-}
-.code-box {
-  font-size: 40px;
-  margin-top: 10px;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BUGFIXED-XMD Pairing</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+  <main class="wrap">
+    <div class="card">
+      <div class="logo">bugfixed sulexh tech</div>
+      <h1 class="heading">PAIRING CODE</h1>
+      <p class="sub">BUGFIXED-SULEXH-MD MULTI DEVICE</p>
 
-<h1 style="color:#00ff8c">PAIRING CODE</h1>
-<h3>BUGFIXED-SULEXH-MD MULTI DEVICE</h3>
+      <label class="lbl">Enter phone number with country code</label>
+      <input id="phone" class="input" placeholder="e.g. 254712345678" inputmode="numeric" />
 
-<div class="card">
-  <p>Please enter your phone number with country code:</p>
-  <input id="phone" placeholder="2547XXXXXXXX">
+      <button id="startBtn" class="btn">GENERATE PAIR CODE</button>
 
-  <button onclick="pairNow()">SUBMIT</button>
+      <div id="status" class="status">No session yet</div>
 
-  <div id="status" style="margin-top:20px;font-size:18px;">
-    No session yet
-  </div>
+      <div id="result" class="result" aria-live="polite">
+        <div id="pairingBox" style="display:none">
+          <div class="pairLabel">Pairing code</div>
+          <div id="pairingCode" class="pairingCode"></div>
+          <div class="hint">Open WhatsApp → Linked devices → Link a device → Enter the code above</div>
+        </div>
+        <div id="downloadArea" style="display:none">
+          <a id="downloadLink" class="downloadBtn" href="#" download>Download creds.json</a>
+        </div>
+      </div>
+    </div>
+  </main>
 
-  <div class="code-box" id="paircode"></div>
-</div>
-
-<script>
-const socket = io();
-
-// Submit phone number
-function pairNow() {
-  const number = document.getElementById("phone").value;
-
-  if (!number) return alert("Enter phone number!");
-
-  document.getElementById("status").innerText = "Requesting Pair Code...";
-
-  fetch("/pair", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ number })
-  });
-}
-
-// Listen for pairing code
-socket.on("pairing_code", (data) => {
-  document.getElementById("status").innerText = "Pair Code Generated:";
-  document.getElementById("paircode").innerText = data.code;
-});
-
-// Linked
-socket.on("paired_success", (data) => {
-  document.getElementById("status").innerText = "Linked Successfully!";
-  document.getElementById("paircode").innerText = "";
-});
-
-// Error
-socket.on("pair_error", (data) => {
-  document.getElementById("status").innerText = "Error: " + data.error;
-  document.getElementById("paircode").innerText = "";
-});
-</script>
-
+  <script src="script.js"></script>
 </body>
 </html>
