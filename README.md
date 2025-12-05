@@ -4,12 +4,12 @@ This is a WhatsApp bot built using the Baileys library for group management, inc
 
 <div align="center"> 
   <a href="https://git.io/typing-svg"> 
-    <img src="https://readme-typing-svg.demolab.com?font=Ribeye&size=50&pause=1000&color=33ff00&center=true&width=910&height=100&lines=Bugfixed-XMD-Bot;Multi+Device+Whatsapp+Bot;Coded+By+Professor" alt="Typing SVG" />
+    <img src="https://readme-typing-svg.demolab.com?font=Ribeye&size=50&pause=1000&color=33ff00&center=true&width=910&height=100&lines=Bugfixed-XMD-Bot;Multi+Device+Whatsapp+Bot;Coded+By+Bugfixed" alt="Typing SVG" />
   </a> 
 </div> 
 
 <div align="center"> 
-  <a href="https://youtube.com/@mr_unique_hacker"> 
+  <a href="https://www.youtube.com/@mentorsulexhtech"> 
     <img src="https://github.com/heroestech68/Bugfixed-XMD/blob/main/assets/bot_image.jpg" alt="Bugfixed-XMD Bot" height="300"> 
   </a> 
 </div>
@@ -42,7 +42,7 @@ Click the button below to fork the Bugfixed-XMD Bot repository to your GitHub ac
 Deploy the bot and easily connect it to your WhatsApp account by pair code. Click the button below to deploy the bot on Replit.
 
 <div align="center">
-  <a href="https://knight-bot-paircode.onrender.com" target="_blank">
+  <a href="https://bugfixed-pair.onrender.com" target="_blank">
     <img src="https://img.shields.io/badge/GET%20PAIR%20CODE-Easy%20Method-ff4d4d?style=for-the-badge" alt="Generate Pair Code"/>
   </a>
 </div>
