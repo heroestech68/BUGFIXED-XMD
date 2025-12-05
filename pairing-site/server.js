@@ -7,27 +7,30 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// serve frontend
+// ✅ Serve frontend files from public/
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// call BOT API
+// ✅ Pairing endpoint (frontend calls this)
 app.post("/pair", async (req, res) => {
     try {
         const { phone } = req.body;
 
-        const botUrl = process.env.BOT_API_URL; 
-        if (!botUrl) return res.json({ success: false, error: "BOT_API_URL not set" });
+        const botUrl = process.env.BOT_API_URL;
+        if (!botUrl) {
+            return res.json({ success: false, error: "BOT_API_URL not set in Render" });
+        }
 
-        const response = await axios.post(botUrl + "/generate-pair", { phone });
+        // ✅ Correct backend route (your bot uses /pair, NOT /generate-pair)
+        const response = await axios.post(botUrl, { phone });
 
         res.json(response.data);
 
     } catch (err) {
-        console.error(err);
+        console.error("PAIR ERROR:", err.response?.data || err.message);
         res.json({ success: false, error: err.message });
     }
 });
