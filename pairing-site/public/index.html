@@ -23,23 +23,34 @@
 
 <script>
 async function pairNow() {
-    let phone = document.getElementById("phone").value;
+    let phone = document.getElementById("phone").value.trim();
+
+    if (!phone) {
+        document.getElementById("status").innerText = "Please enter a phone number!";
+        return;
+    }
+
     document.getElementById("status").innerHTML = "Please wait...";
     document.getElementById("code").innerHTML = "";
 
-    let result = await fetch("/pair", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone })
-    });
+    try {
+        const result = await fetch("/pair", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone })
+        });
 
-    let data = await result.json();
+        const data = await result.json();
 
-    if (data.success) {
-        document.getElementById("status").innerHTML = data.message;
-        document.getElementById("code").innerHTML = data.pair_code;
-    } else {
-        document.getElementById("status").innerHTML = "Error: " + data.error;
+        if (data.success) {
+            document.getElementById("status").innerHTML = data.message;
+            document.getElementById("code").innerText = data.pair_code;
+        } else {
+            document.getElementById("status").innerHTML = "Error: " + data.error;
+        }
+
+    } catch (err) {
+        document.getElementById("status").innerHTML = "Server error.";
     }
 }
 </script>
