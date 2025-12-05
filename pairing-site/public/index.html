@@ -1,57 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BUGFIXED-XMD Pairing</title>
-    <style>
-        body { font-family: Arial; text-align: center; padding: 50px; }
-        #box { width: 330px; margin: auto; background: #eee; padding: 20px; border-radius: 10px; }
-        input { width: 90%; padding: 10px; font-size: 17px; margin-top: 10px; }
-        button { padding: 12px 30px; background: #1a73e8; color: white; border: none; font-size: 18px; border-radius: 6px; cursor: pointer; }
-        #code { font-size: 30px; margin-top: 20px; font-weight: bold; }
-    </style>
+  <title>Bugfixed Pair</title>
 </head>
 <body>
+  <h2>Generate Pair Code</h2>
 
-<h2>BUGFIXED-XMD WhatsApp Pairing</h2>
+  <input id="phone" placeholder="Enter phone e.g. 2547xxxxxxx" />
+  <button onclick="generatePair()">Generate</button>
 
-<div id="box">
-    <input id="phone" placeholder="Enter phone number (e.g. 2547xxxxxxx)">
-    <button onclick="pairNow()">Generate Pair Code</button>
-    <p id="status"></p>
-    <p id="code"></p>
-</div>
+  <p id="result"></p>
 
 <script>
-async function pairNow() {
-    let phone = document.getElementById("phone").value.trim();
+async function generatePair() {
+  const phone = document.getElementById("phone").value;
+  document.getElementById("result").innerText = "Please wait...";
 
-    if (!phone) {
-        document.getElementById("status").innerText = "Please enter a phone number!";
-        return;
-    }
+  const res = await fetch("https://bugfixed-bot.onrender.com/generate-pair", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phoneNumber: phone })
+  });
 
-    document.getElementById("status").innerHTML = "Please wait...";
-    document.getElementById("code").innerHTML = "";
+  const data = await res.json();
 
-    try {
-        const result = await fetch("/pair", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone })
-        });
-
-        const data = await result.json();
-
-        if (data.success) {
-            document.getElementById("status").innerHTML = data.message;
-            document.getElementById("code").innerText = data.pair_code;
-        } else {
-            document.getElementById("status").innerHTML = "Error: " + data.error;
-        }
-
-    } catch (err) {
-        document.getElementById("status").innerHTML = "Server error.";
-    }
+  if (data.pairingCode) {
+    document.getElementById("result").innerText = "Your Pairing Code: " + data.pairingCode;
+  } else {
+    document.getElementById("result").innerText = "Error: " + data.error;
+  }
 }
 </script>
 
