@@ -1,148 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bugfixed-XMD Pair Code</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .card {
-            width: 90%;
-            max-width: 420px;
-            background: #fff;
-            padding: 25px;
-            text-align: center;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .bot-icon {
-            width: 90px;
-            height: 90px;
-            background: black;
-            border-radius: 100px;
-            margin: auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .bot-icon img {
-            width: 50px;
-        }
-        h2 { margin-top: 20px; font-size: 23px; }
-        .tab-btn {
-            width: 49%;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .active {
-            background: black;
-            color: white;
-        }
-        input {
-            width: 100%;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 12px;
-            border: 1px solid #ccc;
-            font-size: 17px;
-        }
-        .btn {
-            width: 100%;
-            margin-top: 15px;
-            background: black;
-            color: white;
-            padding: 15px;
-            font-size: 17px;
-            border-radius: 12px;
-            border: none;
-            cursor: pointer;
-        }
-        .output-box {
-            margin-top: 15px;
-            background: #f0f0f0;
-            padding: 18px;
-            border-radius: 12px;
-            font-size: 17px;
-        }
-        .copy-btn {
-            margin-top: 10px;
-            background: #ddd;
-            border: none;
-            padding: 12px;
-            width: 100%;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-        footer {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #777;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bugfixed-XMD Pair Code</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 20px;
+}
+.container {
+    max-width: 450px;
+    margin: auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 0 15px #00000015;
+}
+.title {
+    text-align: center;
+    font-size: 25px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+.input-box {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+.btn {
+    width: 100%;
+    background: black;
+    color: white;
+    padding: 12px;
+    margin-top: 15px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+}
+.code-box {
+    margin-top: 15px;
+    padding: 15px;
+    background: #fafafa;
+    text-align: center;
+    border-radius: 10px;
+}
+</style>
 </head>
-
 <body>
 
-<div class="card">
-    <div class="bot-icon">
-        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712100.png">
-    </div>
+<div class="container">
+    <div class="title">Bugfixed-XMD Pair Code</div>
 
-    <h2>Bugfixed-XMD Pair Code</h2>
-    <p>Link your WhatsApp device</p>
+    <input id="number" class="input-box" placeholder="Enter WhatsApp number (e.g +2547..)">
+    <button class="btn" onclick="generate()">Generate Pair Code</button>
 
-    <div style="margin-top: 15px;">
-        <button class="tab-btn active">🔑 Pair Code</button>
-        <button class="tab-btn">📱 QR Code</button>
-    </div>
-
-    <input id="number" placeholder="Enter WhatsApp number with country code">
-
-    <button class="btn" onclick="generateCode()">🔑 Generate Pair Code</button>
-
-    <div id="output" class="output-box">Your pair code will appear here</div>
-    <button class="copy-btn" onclick="copyCode()">📋 Copy Code</button>
-
-    <footer>© 2025 Bugfixed-XMD</footer>
+    <div id="result" class="code-box">Your pair code will appear here</div>
 </div>
 
 <script>
-async function generateCode() {
-    const number = document.getElementById("number").value.trim();
-    if (!number) return alert("Enter WhatsApp number");
-
-    document.getElementById("output").innerHTML = "Generating...";
-
-    try {
-        const res = await fetch("/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ number })
-        });
-
-        const data = await res.json();
-        document.getElementById("output").innerHTML = data.code || "Error!";
-    } catch {
-        document.getElementById("output").innerHTML = "Server error!";
+async function generate() {
+    const number = document.getElementById("number").value;
+    if (!number) {
+        alert("Enter a WhatsApp number");
+        return;
     }
-}
 
-function copyCode() {
-    const code = document.getElementById("output").innerText;
-    navigator.clipboard.writeText(code);
-    alert("Copied!");
+    document.getElementById("result").innerText = "Generating...";
+
+    const res = await fetch("/pair", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ number })
+    });
+
+    const data = await res.json();
+
+    if (data.code) {
+        document.getElementById("result").innerText = data.code;
+    } else {
+        document.getElementById("result").innerText = "Error generating code";
+    }
 }
 </script>
 
