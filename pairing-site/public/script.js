@@ -1,87 +1,42 @@
 const $ = id => document.getElementById(id);
 
-const startBtn = $('startBtn');
-const phoneInput = $('phone');
-const statusEl = $('status');
-const pairingBox = $('pairingBox');
-const pairingCodeEl = $('pairingCode');
-const downloadArea = $('downloadArea');
-const downloadLink = $('downloadLink');
-
 let sessionId = null;
-let pollTimer = null;
+let timer = null;
 
-function makeSessionId(){
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
-}
+$("startBtn").onclick = async () => {
+  const phone = $("phone").value.trim();
+  if (!phone) return alert("Enter phone number!");
 
-function setLoading(on){
-  startBtn.disabled = on;
-  startBtn.style.opacity = on ? 0.7 : 1;
-}
+  $("status").innerText = "Starting session...";
 
-startBtn.addEventListener('click', startSession);
-phoneInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') startSession(); });
+  const res = await fetch("/api/start-session", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ phoneNumber: phone })
+  });
 
-async function startSession(){
-  const phone = phoneInput.value.trim();
-  if (!phone) { alert('Enter phone number with country code'); phoneInput.focus(); return; }
+  const data = await res.json();
+  sessionId = data.session;
 
-  sessionId = makeSessionId();
-  setLoading(true);
-  statusEl.textContent = 'Starting session...';
-  pairingBox.style.display = 'none';
-  downloadArea.style.display = 'none';
-  pairingCodeEl.textContent = '';
+  $("status").innerText = "Waiting for pairing code...";
 
-  try {
-    const res = await fetch('/api/start-session', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ phoneNumber: phone })
-    });
-    const j = await res.json();
-    if (!j || j.ok === false) {
-      statusEl.textContent = 'Server error starting session';
-      setLoading(false);
-      return;
-    }
-    statusEl.textContent = 'Session created — waiting for pairing code';
-    pollTimer = setInterval(pollStatus, 2000);
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = 'Network error';
-    setLoading(false);
+  timer = setInterval(checkStatus, 1500);
+};
+
+async function checkStatus() {
+  const res = await fetch(`/api/status/${sessionId}`);
+  const data = await res.json();
+
+  if (data.pairingCode) {
+    $("pairingContainer").style.display = "block";
+    $("pairCode").innerText = data.pairingCode;
+    $("status").innerText = "Enter the code in WhatsApp";
   }
-}
 
-async function pollStatus(){
-  if (!sessionId) return;
-  try {
-    const res = await fetch(`/api/status/${sessionId}`);
-    const j = await res.json();
-    if (!j || j.ok === false) {
-      statusEl.textContent = 'Session not found';
-      return;
-    }
-
-    if (j.pairingCode) {
-      pairingBox.style.display = 'block';
-      pairingCodeEl.textContent = j.pairingCode;
-      statusEl.textContent = 'Pairing code generated — enter it in WhatsApp (Linked devices → Link a device)';
-    } else {
-      statusEl.textContent = 'Waiting for pairing code...';
-    }
-
-    if (j.ready) {
-      clearInterval(pollTimer);
-      statusEl.textContent = 'Paired — credentials ready';
-      downloadArea.style.display = 'block';
-      downloadLink.href = `/api/download-creds/${sessionId}`;
-      setLoading(false);
-    }
-  } catch (err) {
-    console.error('poll error', err);
-    statusEl.textContent = 'Polling error';
+  if (data.ready) {
+    $("status").innerText = "Session Paired ✔";
+    $("downloadLink").style.display = "block";
+    $("downloadLink").href = `/api/download-creds/${sessionId}`;
+    clearInterval(timer);
   }
 }
