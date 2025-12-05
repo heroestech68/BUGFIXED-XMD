@@ -3,59 +3,46 @@
 <head>
     <title>BUGFIXED-XMD Pairing</title>
     <style>
-        body { 
-            font-family: Arial; 
-            text-align: center; 
-            padding: 40px; 
-        }
-        #box {
-            width: 320px;
-            margin: auto;
-            padding: 20px;
-            border-radius: 10px;
-            background: #f3f3f3;
-            box-shadow: 0 0 10px rgba(0,0,0,.1);
-        }
-        input {
-            width: 90%;
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 17px;
-        }
-        button {
-            padding: 10px 25px;
-            font-size: 17px;
-            cursor: pointer;
-            background: #0a84ff;
-            border: none;
-            color: white;
-            border-radius: 6px;
-        }
+        body { font-family: Arial; text-align: center; padding: 50px; }
+        #box { width: 330px; margin: auto; background: #eee; padding: 20px; border-radius: 10px; }
+        input { width: 90%; padding: 10px; font-size: 17px; margin-top: 10px; }
+        button { padding: 12px 30px; background: #1a73e8; color: white; border: none; font-size: 18px; border-radius: 6px; cursor: pointer; }
+        #code { font-size: 30px; margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h2>BUGFIXED-XMD Pairing</h2>
-    <div id="box">
-        <input id="phone" placeholder="Enter phone number" />
-        <button onclick="pairNow()">Start Pairing</button>
-        <p id="status"></p>
-    </div>
 
-    <script>
-        async function pairNow() {
-            let phone = document.getElementById("phone").value;
+<h2>BUGFIXED-XMD WhatsApp Pairing</h2>
 
-            document.getElementById("status").innerHTML = "Processing...";
+<div id="box">
+    <input id="phone" placeholder="Enter phone number (e.g. 2547xxxxxxx)">
+    <button onclick="pairNow()">Generate Pair Code</button>
+    <p id="status"></p>
+    <p id="code"></p>
+</div>
 
-            let result = await fetch("/pair", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone })
-            });
+<script>
+async function pairNow() {
+    let phone = document.getElementById("phone").value;
+    document.getElementById("status").innerHTML = "Please wait...";
+    document.getElementById("code").innerHTML = "";
 
-            let data = await result.json();
-            document.getElementById("status").innerHTML = data.message;
-        }
-    </script>
+    let result = await fetch("/pair", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone })
+    });
+
+    let data = await result.json();
+
+    if (data.success) {
+        document.getElementById("status").innerHTML = data.message;
+        document.getElementById("code").innerHTML = data.pair_code;
+    } else {
+        document.getElementById("status").innerHTML = "Error: " + data.error;
+    }
+}
+</script>
+
 </body>
 </html>
