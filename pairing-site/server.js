@@ -1,111 +1,58 @@
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import fs from "fs";
-import path from "path";
-import {
-  makeWASocket,
-  useMultiFileAuthState,
-  fetchLatestBaileysVersion,
-  DisconnectReason
-} from "@whiskeysockets/baileys";
+const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.static("public"));
 
-// SERVE FRONTEND
-app.use(express.static(path.join(process.cwd(), "public")));
+app.post("/pair", async (req, res) => {
+    try {
+        const { phone } = req.body;
 
-const sessions = {};
+        if (!phone) return res.json({ status: false, message: "Phone number required!" });
 
-function newId() {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-}
+        const sessionFolder = `./sessions/${phone}`;
+        if (!fs.existsSync("./sessions")) fs.mkdirSync("./sessions");
+        if (!fs.existsSync(sessionFolder)) fs.mkdirSync(sessionFolder);
 
-// API: START SESSION
-app.post("/api/start-session", async (req, res) => {
-  const phone = req.body.phoneNumber;
-  if (!phone) return res.json({ ok: false, error: "Missing phone number" });
+        const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
+        const { version } = await fetchLatestBaileysVersion();
 
-  const sessionId = newId();
-  const sessionPath = path.join(process.cwd(), "sessions", sessionId);
-  fs.mkdirSync(sessionPath, { recursive: true });
+        let sock = makeWASocket({
+            version,
+            auth: state,
+            printQRInTerminal: false
+        });
 
-  const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-  let version = (await fetchLatestBaileysVersion()).version;
+        sock.ev.on("creds.update", saveCreds);
 
-  const sock = makeWASocket({
-    auth: state,
-    version,
-    printQRInTerminal: false,
-    browser: ["Bugfixed-XMD", "Chrome", "1.0"],
-  });
+        sock.on("connection.update", (update) => {
+            const { qr, pairingCode, connection } = update;
 
-  sessions[sessionId] = {
-    sock,
-    sessionPath,
-    pairingCode: null,
-    ready: false,
-    creds: null,
-  };
+            if (pairingCode) {
+                res.json({
+                    status: true,
+                    pairingCode: pairingCode,
+                    message: "Enter this code on WhatsApp → Linked Devices"
+                });
+            }
 
-  sock.ev.on("creds.update", saveCreds);
+            if (connection === "open") {
+                console.log("Connected Successfully!");
+            }
+        });
 
-  sock.ev.on("connection.update", async (update) => {
-    const { connection, pairingCode } = update;
+        await sock.requestPairingCode(phone);
 
-    if (pairingCode) sessions[sessionId].pairingCode = pairingCode;
-
-    if (connection === "open") {
-      const file = path.join(sessionPath, "creds.json");
-      if (fs.existsSync(file)) {
-        sessions[sessionId].creds = fs.readFileSync(file, "utf8");
-        sessions[sessionId].ready = true;
-      }
+    } catch (err) {
+        console.error("Error:", err);
+        res.json({ status: false, message: "Server error", error: err.toString() });
     }
-
-    if (connection === "close") {
-      const reason = update?.lastDisconnect?.error?.output?.statusCode;
-      if (reason !== DisconnectReason.loggedOut) {
-        try { await sock.connect(); } catch {}
-      }
-    }
-  });
-
-  await sock.requestPairingCode(phone);
-
-  return res.json({ ok: true, session: sessionId });
 });
 
-// API: GET STATUS
-app.get("/api/status/:id", (req, res) => {
-  const id = req.params.id;
-  const s = sessions[id];
-  if (!s) return res.json({ ok: false });
-
-  res.json({
-    ok: true,
-    pairingCode: s.pairingCode,
-    ready: s.ready,
-    creds: s.ready ? s.creds : null,
-  });
+app.listen(10000, () => {
+    console.log("Server running on port 10000");
 });
-
-// API: DOWNLOAD CREDS
-app.get("/api/download-creds/:id", (req, res) => {
-  const id = req.params.id;
-  const s = sessions[id];
-  if (!s) return res.status(404).send("Not found");
-
-  const file = path.join(s.sessionPath, "creds.json");
-  res.download(file, "creds.json");
-});
-
-// SERVE FRONTEND FOR /
-app.get("/", (req, res) => {
-  res.sendFile(path.join(process.cwd(), "public", "index.html"));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("PAIRING SERVER RUNNING ON", PORT));
