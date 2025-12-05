@@ -2,7 +2,7 @@ const settings = {
   packname: 'Bugfixed-XMD Bot',
   author: '‎',
   botName: "Bugfixed-XMD Bot",
-  botOwner: 'Professor', // Your name
+  botOwner: 'Bugfixed Tech', // Your name
   ownerNumber: '254768161116', //Set your number here without + symbol, just add country code & number without any space
   giphyApiKey: 'qnl7ssQChTdPjsKta2Ax2LMaGXz303tq',
   commandMode: "public",
