@@ -19,13 +19,13 @@ async function generatePair() {
   const res = await fetch("https://bugfixed-bot.onrender.com/generate-pair", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phoneNumber: phone })
+    body: JSON.stringify({ phone: phone })  // ✅ FIXED
   });
 
   const data = await res.json();
 
-  if (data.pairingCode) {
-    document.getElementById("result").innerText = "Your Pairing Code: " + data.pairingCode;
+  if (data.pair_code) {   // ✅ backend returns pair_code
+    document.getElementById("result").innerText = "Your Pairing Code: " + data.pair_code;
   } else {
     document.getElementById("result").innerText = "Error: " + data.error;
   }
