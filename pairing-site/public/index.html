@@ -1,38 +1,48 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BUGFIXED-XMD Pairing</title>
-  <link rel="stylesheet" href="style.css" />
+    <title>WhatsApp Pairing</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .box { width: 350px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; margin: auto; }
+        input, button { width: 100%; padding: 10px; margin-top: 10px; }
+        #result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
+    </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="card">
-      <div class="logo">bugfixed sulexh tech</div>
-      <h1 class="heading">PAIRING CODE</h1>
-      <p class="sub">BUGFIXED-SULEXH-MD MULTI DEVICE</p>
 
-      <label class="lbl">Enter phone number with country code</label>
-      <input id="phone" class="input" placeholder="e.g. 254712345678" inputmode="numeric" />
+<div class="box">
+    <h2>WhatsApp Pair Code Generator</h2>
 
-      <button id="startBtn" class="btn">GENERATE PAIR CODE</button>
+    <input id="phone" placeholder="e.g 254712345678" />
 
-      <div id="status" class="status">No session yet</div>
+    <button onclick="getCode()">Generate Pair Code</button>
 
-      <div id="result" class="result" aria-live="polite">
-        <div id="pairingBox" style="display:none">
-          <div class="pairLabel">Pairing code</div>
-          <div id="pairingCode" class="pairingCode"></div>
-          <div class="hint">Open WhatsApp → Linked devices → Link a device → Enter the code above</div>
-        </div>
-        <div id="downloadArea" style="display:none">
-          <a id="downloadLink" class="downloadBtn" href="#" download>Download creds.json</a>
-        </div>
-      </div>
-    </div>
-  </main>
+    <div id="result"></div>
+</div>
 
-  <script src="script.js"></script>
+<script>
+async function getCode() {
+    const phone = document.getElementById("phone").value;
+    const resultBox = document.getElementById("result");
+
+    resultBox.innerHTML = "Processing...";
+
+    const res = await fetch("/pair", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone })
+    });
+
+    const data = await res.json();
+
+    if (data.status) {
+        resultBox.innerHTML = `<b>Pair Code:</b> ${data.pairingCode}`;
+    } else {
+        resultBox.innerHTML = "Error: " + data.message;
+    }
+}
+</script>
+
 </body>
 </html>
