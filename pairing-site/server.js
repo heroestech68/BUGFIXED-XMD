@@ -1,33 +1,44 @@
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import { makeWASocket, useMultiFileAuthState } from "whiskeysockets/baileys";
+const express = require("express");
+const cors = require("cors");
+const {
+    default: makeWASocket,
+    useMultiFileAuthState,
+    fetchLatestBaileysVersion
+} = require("@whiskeysockets/baileys");
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.json());
 
-app.post("/generate", async (req, res) => {
-  try {
-    const { number } = req.body;
-    if (!number) return res.json({ code: "Invalid number!" });
-
-    const { state, saveCreds } = await useMultiFileAuthState("./session");
-
-    const sock = makeWASocket({
-      auth: state,
-      printQRInTerminal: false,
-    });
-
-    const code = await sock.requestPairingCode(number);
-
-    res.json({ code });
-    await saveCreds();
-  } catch (err) {
-    console.log("Pair error:", err);
-    res.json({ code: "Error generating code" });
-  }
+app.get("/", (req, res) => {
+    res.send("Pairing site backend is running!");
 });
 
-app.listen(3000, () => console.log("Pairing Site Running on Port 3000"));
+// MAIN PAIR ENDPOINT
+app.post("/pair", async (req, res) => {
+    try {
+        const number = req.body.number;
+        if (!number) return res.json({ error: "WhatsApp number is required" });
+
+        const { state, saveCreds } = await useMultiFileAuthState(`./sessions/${number}`);
+        const { version } = await fetchLatestBaileysVersion();
+
+        const sock = makeWASocket({
+            version,
+            printQRInTerminal: false,
+            auth: state
+        });
+
+        const code = await sock.requestPairingCode(number);
+
+        res.json({ code });
+
+        sock.ev.on("creds.update", saveCreds);
+    } catch (err) {
+        console.log("PAIR ERROR:", err);
+        res.json({ error: "Could not generate pair code" });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Pairing server running on " + PORT));
