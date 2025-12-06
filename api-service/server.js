@@ -1,28 +1,66 @@
+// ===============================
+//  BUGFIXED-XMD API SERVICE
+//  Auto-load Bot + API Server
+// ===============================
+
 const express = require("express");
-const bodyParser = require("body-parser");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
-app.use(bodyParser.json());
 app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// TEST ROUTE
-app.get("/", (req, res) => {
-  res.json({ status: "API is running", version: "1.0" });
+// ---------------------------------
+// 1. START BOT-SERVICE
+// ---------------------------------
+console.log("Starting BOT service...");
+try {
+    require("../bot-service/index.js");
+    console.log("BOT service loaded successfully!");
+} catch (err) {
+    console.error("BOT service failed to start:", err);
+}
+
+// ---------------------------------
+// 2. PAIR CODE ENDPOINT (for pairing-site)
+// ---------------------------------
+app.get("/pair", async (req, res) => {
+    return res.json({
+        success: true,
+        message: "Pairing API is running",
+        instructions: "Use /generate to get pairing code"
+    });
 });
 
-// GENERATE PAIR ROUTE (connects to worker)
-app.post("/generate-pair", async (req, res) => {
-  const { phone } = req.body;
+const generatePairingCode = require("../pairing-api.js");
 
-  if (!phone) return res.json({ success: false, error: "Phone missing" });
-
-  return res.json({
-    success: true,
-    message: "Pair request received",
-    phone_received: phone
-  });
+// Generate pairing code
+app.get("/generate", async (req, res) => {
+    try {
+        const code = await generatePairingCode();
+        return res.json({
+            success: true,
+            pairingCode: code
+        });
+    } catch (error) {
+        return res.json({
+            success: false,
+            error: error.message
+        });
+    }
 });
 
+// ---------------------------------
+// 3. STATIC FRONTEND (pairing-site)
+// ---------------------------------
+app.use("/", express.static(path.join(__dirname, "../pairing-site")));
+
+// ---------------------------------
+// 4. START SERVER
+// ---------------------------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("API running on port " + PORT));
+app.listen(PORT, () => {
+    console.log(`API service running on PORT ${PORT}`);
+});
